@@ -6,6 +6,12 @@ import socket
 import socks
 import httplib
 
+def connectHeroku():
+	conn = httplib.HTTPConnection("my-ip.herokuapp.com")
+        conn.request("GET", "/")
+        response = conn.getresponse()
+        print(response.read())
+
 def connectTor():
 	socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", 9050, True)
 	socket.socket = socks.socksocket
@@ -25,16 +31,10 @@ def newIdentity():
 def main():
 	connectTor()
 	print("Connected to Tor")
-	conn = httplib.HTTPConnection("my-ip.herokuapp.com")
-	conn.request("GET", "/")
-	response = conn.getresponse()
-	print(response.read())
+	connectHeroku()
 
 	newIdentity()
-	conn = httplib.HTTPConnection("my-ip.herokuapp.com")
-        conn.request("GET", "/")
-        response = conn.getresponse()
-        print(response.read())
+	connectHeroku()
 
 if __name__ == "__main__":
 	main()
