@@ -36,7 +36,7 @@ def refine_targetlist(targets):
                 sys.exit('Invalid address or netmask: ' + target_line)
         else:
             outputlist.append(target_line)
-            random.shuffle(outputlist)
+    random.shuffle(outputlist)
     return(outputlist)
 
 def query(url):
