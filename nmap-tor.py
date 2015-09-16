@@ -23,12 +23,20 @@ source_port = int(config.get("Scanner", "source_port"))
 
 #helper functions
 def refine_targetlist(targets):
+    # Extract host ips from network blocks and randomize host scan order
     global num_hosts
     outputlist = []
-    num_targets = len(targets)
-    while num_hosts > 0:
-        outputlist.append(targets[random.randrange(0,num_targets)])
-        num_hosts -= 1
+    for target_line in targets:
+        target_line = target_line.rstrip()
+        if "/" in target_line:
+            try:
+                for address in (ipaddress.ip_network(unicode(target_line)).hosts()):
+                    outputlist.append(str(address))
+            except ValueError:
+                sys.exit('Invalid address or netmask: ' + target_line)
+        else:
+            outputlist.append(target_line)
+            random.shuffle(outputlist)
     return(outputlist)
 
 def query(url):
@@ -55,8 +63,8 @@ def printhelp():
     print'    usage: ./nmap-tor.py <options>'
     print'    options:'
     print'      -h, --help          Display this message.'
-    print'      -t, --target      specify single IP address of target'
-    print'      -f, --targetlist  specify file of IP addresses to use as target'
+    print'      -t, --target      specify single IP address or network of target'
+    print'      -f, --targetlist  specify file of IP addresses and/or networks to use as target'
     print'      -p, --portlist    specify file of ports to be used on target'
 
 
