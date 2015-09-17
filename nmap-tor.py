@@ -15,6 +15,7 @@ hostlist = []
 num_targets = 0
 num_hosts = 0
 first_run = True
+sleep_time = 10
 
 config = ConfigParser.ConfigParser()
 config.read('scanner.cfg')
@@ -66,15 +67,16 @@ def query(url):
 def printhelp():
     print'    usage: ./nmap-tor.py <options>'
     print'    options:'
-    print'      -h, --help          Display this message.'
-    print'      -t, --target      specify single IP address or network of target'
-    print'      -f, --targetlist  specify file of IP addresses and/or networks to use as target'
-    print'      -p, --portlist    specify file of ports to be used on target'
+    print'      -h, --help        Display this message'
+    print'      -t, --target      Specify single IP address or network of target'
+    print'      -f, --targetlist  Specify file of IP addresses and/or networks to use as target'
+    print'      -p, --portlist    Specify file of ports to be used on target'
+    print'      -s, --sleep       Specify time in seconds to sleep between Nmap requests (default:10)'
 
 
 # System arguments for input and output files
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hf:t:p:")
+    opts, args = getopt.getopt(sys.argv[1:], "hf:t:p:s:", ["help", "target=", "targetlist=", "portlist=", "sleep="])
 except getopt.GetoptError:
     print printhelp()
     sys.exit(2)
@@ -85,7 +87,7 @@ for opt, arg in opts:
     if opt == '-h':
         print printhelp()
         sys.exit(2)
-    elif opt in "-f":
+    elif opt in ("-f", "--targetlist"):
         inputfile = arg
         try:
             with open(inputfile) as hostfile:
@@ -95,7 +97,7 @@ for opt, arg in opts:
                 num_hosts = len(hostlist)
         except:
             sys.exit("Input file for hosts is not valid")
-    elif opt in "-p":
+    elif opt in ("-p", "--portlist"):
         inputfile = arg
         try:
             with open(inputfile) as portfile:
@@ -105,8 +107,7 @@ for opt, arg in opts:
                 num_ports = len(targetports)
         except:
             sys.exit("Input file for ports is not valid")
-
-    elif opt in "-t":
+    elif opt in ("-t", "--target"):
         try:
             arg_ucode = unicode(arg)
             target_subnet = ipaddress.IPv4Network(arg_ucode)
@@ -119,6 +120,8 @@ for opt, arg in opts:
             sys.exit('Invalid subnet mask')
     elif opt in "-n":
         num_hosts = int(arg)
+    elif opt in ("-s", "--sleep"):
+        sleep_time = float(arg)
 
 print "[+] Nmap-Tor-Scanner starting up...\n"
 targetlist = refine_targetlist(hostlist)
@@ -126,8 +129,8 @@ targetlist = refine_targetlist(hostlist)
 for target in targetlist:
     for dest_port in targetports:
         if not first_run:
-            print "\n[+] Sleeping for 10 seconds..."
-            time.sleep(10)
+            print "\n[+] Sleeping for " + str(sleep_time) + " seconds..."
+            time.sleep(sleep_time)
             tor.changeIP()
         else:
             first_run = False
