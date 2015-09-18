@@ -1,4 +1,8 @@
-# nmap-tor-scanner
-NMAP port scanner that changes exit nodes between each port.
+Standalone Nmap python app
 
-The program is still underdevelopment and does not currently work at all. 
+usage: ./nmap-tor.py <options>
+options:
+  -h, --help          Display this message.
+  -t, --target      specify single IP address of target
+  -f, --targetlist  specify file of IP addresses to use as target
+  -p, --portlist    specify file of ports to be used on target
