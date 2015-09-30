@@ -97,7 +97,6 @@ for opt, arg in opts:
                 hostlist = []
                 for host in hostfile:
                     hostlist.append(host)
-                num_hosts = len(hostlist)
         except:
             sys.exit("Input file for hosts is not valid")
     elif opt in ("-p", "--portlist"):
