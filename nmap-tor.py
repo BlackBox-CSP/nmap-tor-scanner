@@ -84,11 +84,11 @@ try:
 except getopt.GetoptError:
     print printhelp()
     sys.exit(2)
-if len(args) < 0:
+if len(args) == 0:
     printhelp()
-    sys.exit("There are no arguments listed")
+    sys.exit("\nError: There were no arguments specified\n")
 for opt, arg in opts:
-    if opt == '-h':
+    if opt in ("-h", "--help"):
         print printhelp()
         sys.exit(2)
     elif opt in ("-f", "--targetlist"):
