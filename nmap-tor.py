@@ -40,6 +40,7 @@ def refine_targetlist(targets):
         else:
             outputlist.append(target_line)
     random.shuffle(outputlist)
+    # Use only a certain number of random hosts if user specified -n
     if num_hosts > 0:
         outputlist = outputlist[0:num_hosts]
     return outputlist
@@ -74,7 +75,7 @@ def printhelp():
     print'      -f, --targetlist  Specify file of IP addresses and/or networks to use as target'
     print'      -p, --portlist    Specify file of ports to be used on target'
     print'      -s, --sleep       Specify time in seconds to sleep between Nmap requests (default:10)'
-
+    print'      -n, --numhosts    Specify number of hosts to be scanned from the provided list'
 
 # System arguments for input and output files
 try:
