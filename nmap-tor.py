@@ -40,6 +40,8 @@ def refine_targetlist(targets):
         else:
             outputlist.append(target_line)
     random.shuffle(outputlist)
+    if num_hosts > 0:
+        outputlist = outputlist[0:num_hosts]
     return outputlist
 
 
@@ -76,7 +78,8 @@ def printhelp():
 
 # System arguments for input and output files
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hf:t:p:s:", ["help", "target=", "targetlist=", "portlist=", "sleep="])
+    opts, args = getopt.getopt(sys.argv[1:], "hf:t:p:s:", ["help", "target=", "targetlist=",
+                                                           "portlist=", "sleep=", "numhosts="])
 except getopt.GetoptError:
     print printhelp()
     sys.exit(2)
@@ -118,7 +121,7 @@ for opt, arg in opts:
             sys.exit('Invalid IP address')
         except ipaddress.NetmaskValueError:
             sys.exit('Invalid subnet mask')
-    elif opt in "-n":
+    elif opt in ("-n", "--numhosts"):
         num_hosts = int(arg)
     elif opt in ("-s", "--sleep"):
         sleep_time = float(arg)
