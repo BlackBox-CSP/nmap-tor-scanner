@@ -40,6 +40,9 @@ def refine_targetlist(targets):
         else:
             outputlist.append(target_line)
     random.shuffle(outputlist)
+    # Use only a certain number of random hosts if user specified -n
+    if num_hosts > 0:
+        outputlist = outputlist[0:num_hosts]
     return outputlist
 
 
@@ -72,11 +75,12 @@ def printhelp():
     print'      -f, --targetlist  Specify file of IP addresses and/or networks to use as target'
     print'      -p, --portlist    Specify file of ports to be used on target'
     print'      -s, --sleep       Specify time in seconds to sleep between Nmap requests (default:10)'
-
+    print'      -n, --numhosts    Specify number of hosts to be scanned from the provided list'
 
 # System arguments for input and output files
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hf:t:p:s:", ["help", "target=", "targetlist=", "portlist=", "sleep="])
+    opts, args = getopt.getopt(sys.argv[1:], "hf:t:p:s:", ["help", "target=", "targetlist=",
+                                                           "portlist=", "sleep=", "numhosts="])
 except getopt.GetoptError:
     print printhelp()
     sys.exit(2)
@@ -94,7 +98,6 @@ for opt, arg in opts:
                 hostlist = []
                 for host in hostfile:
                     hostlist.append(host)
-                num_hosts = len(hostlist)
         except:
             sys.exit("Input file for hosts is not valid")
     elif opt in ("-p", "--portlist"):
@@ -118,7 +121,7 @@ for opt, arg in opts:
             sys.exit('Invalid IP address')
         except ipaddress.NetmaskValueError:
             sys.exit('Invalid subnet mask')
-    elif opt in "-n":
+    elif opt in ("-n", "--numhosts"):
         num_hosts = int(arg)
     elif opt in ("-s", "--sleep"):
         sleep_time = float(arg)
