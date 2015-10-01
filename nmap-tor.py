@@ -84,7 +84,7 @@ try:
 except getopt.GetoptError:
     print printhelp()
     sys.exit(2)
-if len(args) == 0:
+if len(opts) == 0:
     printhelp()
     sys.exit("\nError: There were no arguments specified\n")
 for opt, arg in opts:
