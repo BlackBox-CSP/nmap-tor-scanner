@@ -14,6 +14,7 @@ __author__ = 'jbollin'
 hostlist = []
 num_targets = 0
 num_hosts = 0
+targets_scanned = 0
 first_run = True
 sleep_time = 10
 
@@ -132,7 +133,7 @@ targetlist = refine_targetlist(hostlist)
 for target in targetlist:
     for dest_port in targetports:
         if not first_run:
-            print "\n[+] Sleeping for " + str(sleep_time) + " seconds..."
+            print "[+] Sleeping for " + str(sleep_time) + " seconds..."
             time.sleep(sleep_time)
             tor.changeIP()
         else:
@@ -140,3 +141,6 @@ for target in targetlist:
         print(query("https://www.atagar.com/echo.php"))
         print "trying {0:s} on {1:s}".format(target, dest_port)
         nmap.print_scan(nmap.do_scan(target, '-sT -p ' + str(dest_port)))
+        targets_scanned += 1
+        print "\n[+] (" + str(targets_scanned) + "/" + str(len(targetlist)) + ") " + \
+              str(round((targets_scanned/float(len(targetlist)))*100, 1)) + "% targets scanned"
