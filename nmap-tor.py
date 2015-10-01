@@ -102,21 +102,31 @@ for opt, arg in opts:
                     hostlist = []
                     for host in hostfile:
                         hostlist.append(host)
-                    num_hosts = len(hostlist)
             except:
                 sys.exit("Input file for hosts is not valid")
         else:
-
+            for host in inputfile.split(","):
+                hostlist.append(host.strip())
     elif opt in ("-p", "--portlist"):
         inputfile = arg
-        try:
-            with open(inputfile) as portfile:
-                targetports = []
-                for port in portfile:
-                    targetports.append(port.strip('\r\n'))
-                num_ports = len(targetports)
-        except:
-            sys.exit("Input file for ports is not valid")
+        targetports = []
+        if os.path.isfile(inputfile):
+            try:
+                with open(inputfile) as portfile:
+
+                    for port in portfile:
+                        targetports.append(port.strip('\r\n'))
+                    num_ports = len(targetports)
+            except:
+                sys.exit("Input file for ports is not valid")
+        else:
+            #try:
+            for host in inputfile.split(","):
+                if int(host.strip()) in range(0,65536):
+                    targetports.append(host)
+                else:
+                    print "[*] Warning: Invalid port specified: " + str(host)
+            #except:
     elif opt in ("-t", "--target"):
         try:
             arg_ucode = unicode(arg)
