@@ -65,7 +65,8 @@ def query(url):
         curl_query.perform()
         return output.getvalue()
     except pycurl.error as exc:
-        return "Unable to reach %s (%s)" % (url, exc)
+        print "[*] Exiting check tor service to see if it is started...\n"
+        sys.exit("Unable to reach %s (%s)" % (url, exc))
 
 
 def printhelp():
