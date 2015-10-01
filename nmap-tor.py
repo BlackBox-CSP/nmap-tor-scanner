@@ -9,6 +9,7 @@ import nmap
 import time
 import pycurl
 import io
+import os.path
 __author__ = 'jbollin'
 
 hostlist = []
@@ -96,13 +97,17 @@ for opt, arg in opts:
         sys.exit(2)
     elif opt in ("-f", "--targetlist"):
         inputfile = arg
-        try:
-            with open(inputfile) as hostfile:
-                hostlist = []
-                for host in hostfile:
-                    hostlist.append(host)
-        except:
-            sys.exit("Input file for hosts is not valid")
+        if os.path.isfile(inputfile):
+            try:
+                with open(inputfile) as hostfile:
+                    hostlist = []
+                    for host in hostfile:
+                        hostlist.append(host)
+                    num_hosts = len(hostlist)
+            except:
+                sys.exit("Input file for hosts is not valid")
+        else:
+
     elif opt in ("-p", "--portlist"):
         inputfile = arg
         try:
