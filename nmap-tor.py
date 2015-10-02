@@ -83,7 +83,7 @@ def printhelp():
 
 # System arguments for input and output files
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hf:t:p:s:", ["help", "target=", "targetlist=",
+    opts, args = getopt.getopt(sys.argv[1:], "hf:t:p:s:n:", ["help", "target=", "targetlist=",
                                                            "portlist=", "sleep=", "numhosts="])
 except getopt.GetoptError:
     print printhelp()
@@ -107,7 +107,7 @@ for opt, arg in opts:
                 sys.exit("Input file for hosts is not valid")
         else:
             for host in inputfile.split(","):
-                hostlist.append(host.strip())
+                hostlist.append(host)
     elif opt in ("-p", "--portlist"):
         inputfile = arg
         targetports = []
@@ -121,13 +121,14 @@ for opt, arg in opts:
             except:
                 sys.exit("Input file for ports is not valid")
         else:
-            #try:
             for host in inputfile.split(","):
-                if int(host.strip()) in range(0,65536):
-                    targetports.append(host)
-                else:
-                    print "[*] Warning: Invalid port specified: " + str(host)
-            #except:
+                try:
+                    if int(host.strip()) in range(0,65536):
+                        targetports.append(host)
+                    else:
+                        raise ValueError
+                except ValueError:
+                    print "[!] Warning: Invalid port specified: '" + str(host) + "'"
     elif opt in ("-t", "--target"):
         try:
             arg_ucode = unicode(arg)
