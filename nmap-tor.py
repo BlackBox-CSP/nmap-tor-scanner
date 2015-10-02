@@ -10,6 +10,9 @@ import time
 import pycurl
 import io
 import os.path
+import re
+import dns.resolver
+import dns.exception
 __author__ = 'jbollin'
 
 hostlist = []
@@ -39,7 +42,7 @@ def refine_targetlist(targets):
                 for address in (ipaddress.ip_network(unicode(target_line)).hosts()):
                     outputlist.append(str(address))
             except ValueError:
-                sys.exit("Invalid address or netmask: " + target_line)
+                print ("[!] Warning: Invalid address or netmask: '" + target_line + "'")
         else:
             outputlist.append(target_line)
     random.shuffle(outputlist)
@@ -72,19 +75,28 @@ def query(url):
 
 
 def printhelp():
-    print'    usage: ./nmap-tor.py <options>'
-    print'    options:'
+    print'    USAGE: nmap-tor.py <options>'
+    print'    OPTIONS:'
     print'      -h, --help        Display this message'
-    print'      -t, --target      Specify single IP address or network of target'
-    print'      -f, --targetlist  Specify file of IP addresses and/or networks to use as target'
-    print'      -p, --portlist    Specify file of ports to be used on target'
-    print'      -s, --sleep       Specify time in seconds to sleep between Nmap requests (default:10)'
-    print'      -n, --numhosts    Specify number of hosts to be scanned from the provided list'
+    print'      -t, --targets     Specify hosts to scan from a file or comma'
+    print'                          separated list'
+    print'      -p, --ports       Specify file of ports to be used on target'
+    print'      -s, --sleep       Specify time in seconds to sleep between Nmap'
+    print'                          requests (default:10)'
+    print'      -n, --numhosts    Specify number of hosts to be randomly scanned'
+    print'                          from the provided list'
+    print'    EXAMPLES:'
+    print'      Scan google.com and 8.8.8.8 on TCP 80, 443, and 22:'
+    print'          nmap-tor.py -t google.com,8.8.8.8 -p 80,443,22\n'
+    print'      Scan 50 random hosts from the 4.2.2.0/24 network on TCP 53:'
+    print'          nmap-tor.py -t 4.2.2.0/24 -p 53 -n 50\n'
+    print'      Scan hosts/networks in hosts.txt on the ports from ports.txt:'
+    print'          nmap-tor.py -t hosts.txt -p ports.txt -s 15 -n 50\n'
+
 
 # System arguments for input and output files
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hf:t:p:s:n:", ["help", "target=", "targetlist=",
-                                                           "portlist=", "sleep=", "numhosts="])
+    opts, args = getopt.getopt(sys.argv[1:], "ht:p:s:n:", ["help", "targets=", "ports=", "sleep=", "numhosts="])
 except getopt.GetoptError:
     print printhelp()
     sys.exit(2)
@@ -95,12 +107,11 @@ for opt, arg in opts:
     if opt in ("-h", "--help"):
         print printhelp()
         sys.exit(2)
-    elif opt in ("-f", "--targetlist"):
+    elif opt in ("-t", "--targets"):
         inputfile = arg
         if os.path.isfile(inputfile):
             try:
                 with open(inputfile) as hostfile:
-                    hostlist = []
                     for host in hostfile:
                         hostlist.append(host)
             except:
@@ -108,13 +119,24 @@ for opt, arg in opts:
         else:
             for host in inputfile.split(","):
                 hostlist.append(host)
-    elif opt in ("-p", "--portlist"):
+        # Check that all hosts are vaild IPs or hostnames
+        temp_hostlist = hostlist
+        for host in temp_hostlist:
+            # Regex matches ip addresses and cidr notation for networks
+            if re.match("^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(/[0-9][0-9]?)?$", host):
+                pass
+            else:
+                try:
+                    dns.resolver.query(host, "A")
+                except dns.exception.DNSException:
+                    print "[!] Warning: unable to resolve host '" + host.rstrip() + "' - Skipping"
+                    hostlist.remove(host)
+    elif opt in ("-p", "--ports"):
         inputfile = arg
         targetports = []
         if os.path.isfile(inputfile):
             try:
                 with open(inputfile) as portfile:
-
                     for port in portfile:
                         targetports.append(port.strip('\r\n'))
                     num_ports = len(targetports)
@@ -129,17 +151,6 @@ for opt, arg in opts:
                         raise ValueError
                 except ValueError:
                     print "[!] Warning: Invalid port specified: '" + str(host) + "'"
-    elif opt in ("-t", "--target"):
-        try:
-            arg_ucode = unicode(arg)
-            target_subnet = ipaddress.IPv4Network(arg_ucode)
-            iplist = list(ipaddress.ip_network(target_subnet).hosts())
-            for ip in iplist:
-                hostlist.append(str(ip.compressed))
-        except ipaddress.AddressValueError:
-            sys.exit('Invalid IP address')
-        except ipaddress.NetmaskValueError:
-            sys.exit('Invalid subnet mask')
     elif opt in ("-n", "--numhosts"):
         num_hosts = int(arg)
     elif opt in ("-s", "--sleep"):
@@ -158,8 +169,9 @@ for target in targetlist:
         else:
             first_run = False
         print(query("https://www.atagar.com/echo.php"))
-        print "trying {0:s} on {1:s}".format(target, dest_port)
+        print "Trying {0:s} on TCP {1:s}".format(target, dest_port)
         nmap.print_scan(nmap.do_scan(target, '-sT -p ' + str(dest_port)))
         targets_scanned += 1
         print "\n[+] (" + str(targets_scanned) + "/" + str(total_targets_and_hosts) + ") " + \
-              str(round((targets_scanned/float(total_targets_and_hosts))*100, 1)) + "% targets scanned"
+              str(round((targets_scanned/float(total_targets_and_hosts))*100, 1)) + "% completed"
+print "[+] Nmap-Tor-Scanner exiting"
