@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import ConfigParser
 import getopt
 import sys
 import ipaddress
@@ -13,7 +12,6 @@ import os.path
 import re
 import dns.resolver
 import dns.exception
-__author__ = 'jbollin'
 
 hostlist = []
 num_targets = 0
@@ -22,11 +20,6 @@ total_targets_and_hosts = 0
 targets_scanned = 0
 first_run = True
 sleep_time = 10
-
-config = ConfigParser.ConfigParser()
-config.read('scanner.cfg')
-source_port = int(config.get("Scanner", "source_port"))
-
 
 # helper functions
 def refine_targetlist(targets):
