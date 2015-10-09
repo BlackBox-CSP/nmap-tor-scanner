@@ -28,4 +28,7 @@ sudo rm /usr/lib/python2.7/dist-packages/pycurl*
 pip install pycurl --upgrade
 pip install stem --upgrade
 pip install python-libnmap --upgrade
+wget http://xael.org/pages/python-nmap-0.1.4.tar.gz
+tar -xzf python-nmap-0.1.4.tar.gz 
+pip install python-nmap-0.1.4/
 
