@@ -22,6 +22,7 @@ first_run = True
 sleep_time = 10
 results_dict = {}
 
+
 # helper functions
 def process_nmap_scan(port_scanner):
     """
@@ -81,10 +82,11 @@ def query(url):
 def printhelp():
     print'    USAGE: nmap-tor.py <options>'
     print'    OPTIONS:'
-    print'      -h, --help        Display this message'
-    print'      -t, --targets     Specify hosts to scan from a file or comma'
-    print'                          separated list'
-    print'      -p, --ports       Specify file of ports to be used on target'
+    print'      -h, --help        Display this help message'
+    print'      -t, --targets     Specify hosts to scan from a file or a'
+    print'                          comma-separated list via CLI'
+    print'      -p, --ports       Specify ports to scan from a file or a'
+    print'                          comma-separated list via CLI'
     print'      -s, --sleep       Specify time in seconds to sleep between Nmap'
     print'                          requests (default:10)'
     print'      -n, --numhosts    Specify number of hosts to be randomly scanned'
@@ -123,7 +125,7 @@ for opt, arg in opts:
         else:
             for host in inputfile.split(","):
                 hostlist.append(host)
-        # Check that all hosts are vaild IPs or hostnames
+        # Check that all hosts are valid IPs or hostnames
         temp_hostlist = hostlist
         for host in temp_hostlist:
             # Regex matches ip addresses and cidr notation for networks
@@ -149,7 +151,7 @@ for opt, arg in opts:
         else:
             for host in inputfile.split(","):
                 try:
-                    if int(host.strip()) in range(0,65536):
+                    if int(host.strip()) in range(0, 65536):
                         targetports.append(host)
                     else:
                         raise ValueError
