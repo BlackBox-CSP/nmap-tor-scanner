@@ -20,8 +20,19 @@ total_targets_and_hosts = 0
 targets_scanned = 0
 first_run = True
 sleep_time = 10
+results_dict = {}
 
 # helper functions
+def process_nmap_scan(port_scanner):
+    """
+    Convert the relevant dict results from the nmap scan to a dict that
+    persists across scans
+    """
+    if results_dict.has_key(target):
+        results_dict[str(target)]['tcp'][int(dest_port)] = port_scanner[target]['tcp'][int(dest_port)]
+    else:
+        results_dict[str(target)] = port_scanner[str(target)]
+
 def refine_targetlist(targets):
     """
     Extract host ips from network blocks and randomize host scan order
@@ -153,6 +164,8 @@ print "[+] Nmap-Tor-Scanner starting up...\n"
 targetlist = refine_targetlist(hostlist)
 total_targets_and_hosts = len(targetlist) * len(targetports)
 
+nmscanner = nmap.PortScanner()
+
 for target in targetlist:
     for dest_port in targetports:
         if not first_run:
@@ -163,8 +176,17 @@ for target in targetlist:
             first_run = False
         print(query("https://www.atagar.com/echo.php"))
         print "Trying {0:s} on TCP {1:s}".format(target, dest_port)
-        nmap.print_scan(nmap.do_scan(target, '-sT -p ' + str(dest_port)))
+        nmscanner.scan(target, str(dest_port), '-sT -n -Pn')
         targets_scanned += 1
+        process_nmap_scan(nmscanner)
+        print "TCP " + str(dest_port) + " is " + nmscanner[target]['tcp'][int(dest_port)]["state"].upper() + " on " + target
         print "\n[+] (" + str(targets_scanned) + "/" + str(total_targets_and_hosts) + ") " + \
               str(round((targets_scanned/float(total_targets_and_hosts))*100, 1)) + "% completed"
-print "[+] Nmap-Tor-Scanner exiting"
+
+print "\nSummary:\n"
+for host in results_dict.viewkeys():
+    print host
+    for port in results_dict[host]['tcp'].viewkeys():
+        print "    TCP " + str(port) + ' ' + results_dict[host]['tcp'][port]['state']
+
+print "\n[+] Nmap-Tor-Scanner exiting"
