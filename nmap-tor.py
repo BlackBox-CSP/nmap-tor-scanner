@@ -23,6 +23,7 @@ sleep_time = 10
 results_dict = {}
 
 
+
 # helper functions
 def process_nmap_scan(port_scanner):
     """
