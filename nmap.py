@@ -194,16 +194,16 @@ class PortScanner(object):
         (self._nmap_last_output, nmap_err) = p.communicate()
 
         # If there was something on stderr, there was a problem so abort...
-        if len(nmap_err) > 0:
-            regex_warning = re.compile('^Warning: .*')
-            for line in nmap_err.split('\n'):
-                if len(line) > 0:
-                    rgw = regex_warning.search(line)
-                    if rgw is not None:
-                        sys.stderr.write(line+'\n')
-                        pass
-                    else:
-                        raise PortScannerError(nmap_err)
+        # if len(nmap_err) > 0:
+        #     regex_warning = re.compile('^Warning: .*')
+        #     for line in nmap_err.split('\n'):
+        #         if len(line) > 0:
+        #             rgw = regex_warning.search(line)
+        #             if rgw is not None:
+        #                 sys.stderr.write(line+'\n')
+        #                 pass
+        #             else:
+        #                 raise PortScannerError(nmap_err)
 
 
         # nmap xml output looks like :

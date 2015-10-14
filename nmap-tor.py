@@ -176,7 +176,7 @@ for target in targetlist:
             first_run = False
         print(query("https://www.atagar.com/echo.php"))
         print "Trying {0:s} on TCP {1:s}".format(target, dest_port)
-        nmscanner.scan(target, str(dest_port), '-sT -n -Pn')
+        nmscanner.scan(target, str(dest_port), '-sT -n -Pn --unprivileged 2>/dev/null')
         targets_scanned += 1
         process_nmap_scan(nmscanner)
         print "TCP " + str(dest_port) + " is " + nmscanner[target]['tcp'][int(dest_port)]["state"].upper() + " on " + target
