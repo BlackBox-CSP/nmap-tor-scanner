@@ -21,6 +21,7 @@ targets_scanned = 0
 first_run = True
 sleep_time = 10
 results_dict = {}
+scripts = ['']
 
 # helper functions
 def process_nmap_scan(port_scanner):
@@ -28,8 +29,15 @@ def process_nmap_scan(port_scanner):
     Convert the relevant dict results from the nmap scan to a dict that
     persists across scans
     """
+    # Check if there's already an entry saved for this host. If there is, avoid overwriting it
     if results_dict.has_key(target):
-        results_dict[str(target)]['tcp'][int(dest_port)] = port_scanner[target]['tcp'][int(dest_port)]
+        # Check if there's already an entry saved for this port. If there is, avoid overwriting it
+        if results_dict[str(target)]['tcp'].has_key(int(dest_port)):
+            current_script_name = port_scanner[str(target)]['tcp'][int(dest_port)]['script'].keys()[0]
+            current_script_output = port_scanner[str(target)]['tcp'][int(dest_port)]['script'].values()[0]
+            results_dict[str(target)]['tcp'][int(dest_port)]['script'][current_script_name] = current_script_output
+        else:
+            results_dict[str(target)]['tcp'][int(dest_port)] = port_scanner[target]['tcp'][int(dest_port)]
     else:
         results_dict[str(target)] = port_scanner[str(target)]
 
@@ -97,10 +105,26 @@ def printhelp():
     print'      Scan hosts/networks in hosts.txt on the ports from ports.txt:'
     print'          nmap-tor.py -t hosts.txt -p ports.txt -s 15 -n 50\n'
 
+def print_script_output(host, script = 'all'):
+    if results_dict[host]['tcp'][int(dest_port)].has_key('script'):
+        if script == 'all':
+            scriptnames = results_dict[target]['tcp'][int(dest_port)]['script'].keys()
+        else:
+            scriptnames = [script]
+        for scriptname in scriptnames:
+            print "| " + scriptname
+            scriptvalue = results_dict[target]['tcp'][int(dest_port)]['script'][scriptname]
+            count = 1
+            for line in scriptvalue.lstrip().split('\n'):
+                if count < len(scriptvalue.lstrip().split('\n')):
+                    print "|   " + line.lstrip()
+                else:
+                    print "|_  " + line.lstrip()
+                count += 1
 
 # System arguments for input and output files
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "ht:p:s:n:", ["help", "targets=", "ports=", "sleep=", "numhosts="])
+    opts, args = getopt.getopt(sys.argv[1:], "ht:p:s:n:", ["help", "targets=", "ports=", "sleep=", "numhosts=", "script="])
 except getopt.GetoptError:
     print printhelp()
     sys.exit(2)
@@ -159,34 +183,56 @@ for opt, arg in opts:
         num_hosts = int(arg)
     elif opt in ("-s", "--sleep"):
         sleep_time = float(arg)
+    elif opt in ("--script"):
+        scripts = []
+        for script in arg.split(','):
+            scripts.append(script)
 
 print "[+] Nmap-Tor-Scanner starting up...\n"
 targetlist = refine_targetlist(hostlist)
-total_targets_and_hosts = len(targetlist) * len(targetports)
+total_targets_and_hosts = len(targetlist) * len(targetports)  * len(scripts)
 
 nmscanner = nmap.PortScanner()
 
 for target in targetlist:
     for dest_port in targetports:
-        if not first_run:
-            print "[+] Sleeping for " + str(sleep_time) + " seconds..."
-            time.sleep(sleep_time)
-            tor.changeIP()
-        else:
-            first_run = False
-        print(query("https://www.atagar.com/echo.php"))
-        print "Trying {0:s} on TCP {1:s}".format(target, dest_port)
-        nmscanner.scan(target, str(dest_port), '-sT -n -Pn --unprivileged 2>/dev/null')
-        targets_scanned += 1
-        process_nmap_scan(nmscanner)
-        print "TCP " + str(dest_port) + " is " + nmscanner[target]['tcp'][int(dest_port)]["state"].upper() + " on " + target
-        print "\n[+] (" + str(targets_scanned) + "/" + str(total_targets_and_hosts) + ") " + \
-              str(round((targets_scanned/float(total_targets_and_hosts))*100, 1)) + "% completed"
+        for script in scripts:
+            arguments = '-sT -Pn --unprivileged'
+            if scripts[0] is not '':
+                arguments = " --script=" + script + " " + arguments
+            if not first_run:
+                print "[+] Sleeping for " + str(sleep_time) + " seconds..."
+                time.sleep(sleep_time)
+                tor.changeIP()
+            else:
+                first_run = False
+            print(query("https://www.atagar.com/echo.php"))
+            sys.stdout.write("Trying {0:s} on TCP {1:s}".format(target, dest_port))
+            if script is not '':
+                sys.stdout.write(" with script '" + script + "'...\n")
+            else:
+                sys.stdout.write("...\n")
+            nmscanner.scan(target, str(dest_port), arguments)
+            targets_scanned += 1
+            process_nmap_scan(nmscanner)
+            print "TCP " + str(dest_port) + " is " + nmscanner[target]['tcp'][int(dest_port)]["state"].upper() + " on " + target
 
-print "\nSummary:\n"
-for host in results_dict.viewkeys():
-    print host
-    for port in results_dict[host]['tcp'].viewkeys():
-        print "    TCP " + str(port) + ' ' + results_dict[host]['tcp'][port]['state']
+            # Output script info during scan
+            print "Script:"
+            print_script_output(target, script)
+
+
+            print "\n[+] (" + str(targets_scanned) + "/" + str(total_targets_and_hosts) + ") " + \
+                   str(round((targets_scanned/float(total_targets_and_hosts))*100, 1)) + "% completed"
+
+# Print a summary if there are multiple hosts being scanned
+if total_targets_and_hosts > 1:
+    print "\n---------------------------------------"
+    print "Summary:\n"
+    for host in results_dict.viewkeys():
+        print host
+        for port in results_dict[host]['tcp'].viewkeys():
+            print "    TCP " + str(port) + ' ' + results_dict[host]['tcp'][port]['state']
+            print_script_output(host)
 
 print "\n[+] Nmap-Tor-Scanner exiting"
