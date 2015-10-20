@@ -22,6 +22,7 @@ first_run = True
 sleep_time = 10
 results_dict = {}
 scripts = ['']
+script_args = ''
 
 # helper functions
 def process_nmap_scan(port_scanner):
@@ -33,9 +34,13 @@ def process_nmap_scan(port_scanner):
     if results_dict.has_key(target):
         # Check if there's already an entry saved for this port. If there is, avoid overwriting it
         if results_dict[str(target)]['tcp'].has_key(int(dest_port)):
-            current_script_name = port_scanner[str(target)]['tcp'][int(dest_port)]['script'].keys()[0]
-            current_script_output = port_scanner[str(target)]['tcp'][int(dest_port)]['script'].values()[0]
-            results_dict[str(target)]['tcp'][int(dest_port)]['script'][current_script_name] = current_script_output
+            try:
+                current_script_name = port_scanner[str(target)]['tcp'][int(dest_port)]['script'].keys()[0]
+                current_script_output = port_scanner[str(target)]['tcp'][int(dest_port)]['script'].values()[0]
+                results_dict[str(target)]['tcp'][int(dest_port)]['script'][current_script_name] = current_script_output
+            # Continue if there was no script output
+            except KeyError:
+                pass
         else:
             results_dict[str(target)]['tcp'][int(dest_port)] = port_scanner[target]['tcp'][int(dest_port)]
     else:
@@ -106,25 +111,34 @@ def printhelp():
     print'          nmap-tor.py -t hosts.txt -p ports.txt -s 15 -n 50\n'
 
 def print_script_output(host, script = 'all'):
+    """
+    Prints the script outputs that are stored in the results_dict dictionary
+    """
     if results_dict[host]['tcp'][int(dest_port)].has_key('script'):
         if script == 'all':
-            scriptnames = results_dict[target]['tcp'][int(dest_port)]['script'].keys()
+            scriptnames = results_dict[host]['tcp'][int(dest_port)]['script'].keys()
         else:
             scriptnames = [script]
         for scriptname in scriptnames:
             print "| " + scriptname
-            scriptvalue = results_dict[target]['tcp'][int(dest_port)]['script'][scriptname]
-            count = 1
-            for line in scriptvalue.lstrip().split('\n'):
-                if count < len(scriptvalue.lstrip().split('\n')):
-                    print "|   " + line.lstrip()
-                else:
-                    print "|_  " + line.lstrip()
-                count += 1
+            try:
+                scriptvalue = results_dict[host]['tcp'][int(dest_port)]['script'][scriptname]
+                count = 1
+                for line in scriptvalue.lstrip().split('\n'):
+                    if count < len(scriptvalue.lstrip().split('\n')):
+                        print "|   " + line.lstrip()
+                    else:
+                        print "|_  " + line.lstrip()
+                    count += 1
+            except KeyError:
+                print "|_  No script output"
+    else:
+        print "|_  No script output"
 
 # System arguments for input and output files
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "ht:p:s:n:", ["help", "targets=", "ports=", "sleep=", "numhosts=", "script="])
+    opts, args = getopt.getopt(sys.argv[1:], "ht:p:s:n:", ["help", "targets=", "ports=", "sleep=", "numhosts=",
+                                                           "script=", "script-args="])
 except getopt.GetoptError:
     print printhelp()
     sys.exit(2)
@@ -147,7 +161,7 @@ for opt, arg in opts:
         else:
             for host in inputfile.split(","):
                 hostlist.append(host)
-        # Check that all hosts are vaild IPs or hostnames
+        # Check that all hosts are valid IPs or hostnames
         temp_hostlist = hostlist
         for host in temp_hostlist:
             # Regex matches ip addresses and cidr notation for networks
@@ -187,6 +201,8 @@ for opt, arg in opts:
         scripts = []
         for script in arg.split(','):
             scripts.append(script)
+    elif opt in ("--script-args"):
+        script_args = arg
 
 print "[+] Nmap-Tor-Scanner starting up...\n"
 targetlist = refine_targetlist(hostlist)
@@ -197,9 +213,9 @@ nmscanner = nmap.PortScanner()
 for target in targetlist:
     for dest_port in targetports:
         for script in scripts:
-            arguments = '-sT -Pn --unprivileged'
+            arguments = ' -sT -Pn --unprivileged'
             if scripts[0] is not '':
-                arguments = " --script=" + script + " " + arguments
+                arguments = " --script=" + script + " --script-args=" + script_args + arguments
             if not first_run:
                 print "[+] Sleeping for " + str(sleep_time) + " seconds..."
                 time.sleep(sleep_time)
@@ -227,12 +243,12 @@ for target in targetlist:
 
 # Print a summary if there are multiple hosts being scanned
 if total_targets_and_hosts > 1:
-    print "\n---------------------------------------"
-    print "Summary:\n"
+    print "\n" + "-" * 40
+    print "Summary:"
     for host in results_dict.viewkeys():
-        print host
+        print "\n" + host
         for port in results_dict[host]['tcp'].viewkeys():
-            print "    TCP " + str(port) + ' ' + results_dict[host]['tcp'][port]['state']
+            print "    TCP " + str(port) + ' ' + results_dict[host]['tcp'][port]['state'].upper()
             print_script_output(host)
 
 print "\n[+] Nmap-Tor-Scanner exiting"
