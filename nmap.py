@@ -185,25 +185,15 @@ class PortScanner(object):
         f_args = shlex.split(arguments)
 
         # Launch scan
-        args = ['nmap', '-oX', '-', hosts] + ['-p', ports]*(ports!=None) + f_args
+        args = ['proxychains', 'nmap', '-oX', '-', hosts] + ['-p', ports]*(ports!=None) + f_args
 
         p = subprocess.Popen(args, bufsize=100000, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         # wait until finished
         # get output
         (self._nmap_last_output, nmap_err) = p.communicate()
-
-        # If there was something on stderr, there was a problem so abort...
-        if len(nmap_err) > 0:
-            regex_warning = re.compile('^Warning: .*')
-            for line in nmap_err.split('\n'):
-                if len(line) > 0:
-                    rgw = regex_warning.search(line)
-                    if rgw is not None:
-                        sys.stderr.write(line+'\n')
-                        pass
-                    else:
-                        raise PortScannerError(nmap_err)
+        # Remove Proxychains intro text to avoid corrupting nmap xml output
+        self._nmap_last_output = self._nmap_last_output.split('\n', 1)[1]
 
 
         # nmap xml output looks like :
@@ -283,12 +273,18 @@ class PortScanner(object):
                 script_id = ''
                 script_out = ''
                 # get script output if any
+                for dprescript in dom.getElementsByTagName('prescript'):
+                    prescript_out = dprescript.getElementsByTagName('script')[0].getAttributeNode('output').value
+                    prescript_id = dprescript.getElementsByTagName('script')[0].getAttributeNode('id').value
+                    if not 'script' in scan_result['scan'][host][proto][port].keys():
+                        scan_result['scan'][host][proto][port]['script'] = {}
+                    scan_result['scan'][host][proto][port]['script'][prescript_id] = prescript_out
                 for dscript in dport.getElementsByTagName('script'):
                     script_id = dscript.getAttributeNode('id').value
                     script_out = dscript.getAttributeNode('output').value
                     if not 'script' in scan_result['scan'][host][proto][port].keys():
+                        # Create a blank scan results dict for this host if it doesn't have any script results yet
                         scan_result['scan'][host][proto][port]['script'] = {}
-
                     scan_result['scan'][host][proto][port]['script'][script_id] = script_out
 
 
