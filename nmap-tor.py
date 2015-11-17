@@ -32,24 +32,29 @@ def process_nmap_scan(port_scanner):
     persists across scans
     """
     global results_dict
-    # Check if there's already an entry saved for this host. If there is, avoid overwriting it
+    # Check if there's already an entry saved for this host. If there is, avoid
+    # overwriting it.
     if results_dict.has_key(target):
-        # Check if there's already an entry saved for this port. If there is, avoid overwriting it
+        # Check if there's already an entry saved for this port. If there is,
+        # avoid overwriting it.
         if results_dict[str(target)]['tcp'].has_key(int(dest_port)):
             try:
                 current_script_name = port_scanner[str(target)]['tcp'][int(dest_port)]['script'].keys()[0]
                 current_script_output = port_scanner[str(target)]['tcp'][int(dest_port)]['script'].values()[0]
                 results_dict[str(target)]['tcp'][int(dest_port)]['script'][current_script_name] = current_script_output
-            # Exception if there was no script output, or there was no "script" dict in which to save the script results
+            # Exception if there was no script output, or there was no "script"
+            # dict in which to save the script results.
             except KeyError:
-                # Create the missing script dict (this is needed due to the first result for this port not having script
-                # output, so the script portion of the results_dict structure isn't created)
+                # Create the missing script dict (this is needed due to the
+                # first result for this port not having script output, so the
+                # script portion of the results_dict structure isn't created)
                 if port_scanner[str(target)]['tcp'][int(dest_port)].has_key('script'):
                     results_dict[str(target)]['tcp'][int(dest_port)]['script'] = {}
                     results_dict[str(target)]['tcp'][int(dest_port)]['script'][current_script_name] = current_script_output
                 else:
                     pass
-        # Create the entry for this port by copying the port dict from the port_scanner results
+        # Create the entry for this port by copying the port dict from the
+        # port_scanner results
         else:
             results_dict[str(target)]['tcp'][int(dest_port)] = port_scanner[target]['tcp'][int(dest_port)]
     # Create the entry for this host because it doesn't exist
@@ -113,7 +118,8 @@ def printhelp():
     print'                          requests (default:10)'
     print'      -n, --numhosts    Specify number of hosts to be randomly scanned'
     print'                          from the provided list'
-    print'      --script          Specify NSE scripts to execute'
+    print'      --script          Specify NSE scripts to execute from a'
+    print'                           comma-separated list via CLI'
     print'    EXAMPLES:'
     print'      Scan google.com and 8.8.8.8 on TCP 80, 443, and 22:'
     print'          nmap-tor.py -t google.com,8.8.8.8 -p 80,443,22\n'
