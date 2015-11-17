@@ -112,6 +112,7 @@ def printhelp():
     print'                          requests (default:10)'
     print'      -n, --numhosts    Specify number of hosts to be randomly scanned'
     print'                          from the provided list'
+    print'      --script          Specify NSE scripts to execute'
     print'    EXAMPLES:'
     print'      Scan google.com and 8.8.8.8 on TCP 80, 443, and 22:'
     print'          nmap-tor.py -t google.com,8.8.8.8 -p 80,443,22\n'
@@ -119,6 +120,8 @@ def printhelp():
     print'          nmap-tor.py -t 4.2.2.0/24 -p 53 -n 50\n'
     print'      Scan hosts/networks in hosts.txt on the ports from ports.txt:'
     print'          nmap-tor.py -t hosts.txt -p ports.txt -s 15 -n 50\n'
+    print'      Scan www.google.com on port 80 and run the "http-title" NSE script'
+    print'          nmap-tor.py -t www.google.com -p 80 --script http-title\n'
 
 def print_script_output(host, script = 'all'):
     """
