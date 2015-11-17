@@ -275,13 +275,17 @@ class PortScanner(object):
                 # get script output if any
                 for dprescript in dom.getElementsByTagName('prescript'):
                     prescript_out = dprescript.getElementsByTagName('script')[0].getAttributeNode('output').value
+                    prescript_id = dprescript.getElementsByTagName('script')[0].getAttributeNode('id').value
+                    if not 'script' in scan_result['scan'][host][proto][port].keys():
+                        scan_result['scan'][host][proto][port]['script'] = {}
+                    scan_result['scan'][host][proto][port]['script'][prescript_id] = prescript_out
                 for dscript in dport.getElementsByTagName('script'):
                     script_id = dscript.getAttributeNode('id').value
                     script_out = dscript.getAttributeNode('output').value
                     if not 'script' in scan_result['scan'][host][proto][port].keys():
+                        # Create a blank scan results dict for this host if it doesn't have any script results yet
                         scan_result['scan'][host][proto][port]['script'] = {}
-
-                    scan_result['scan'][host][proto][port]['script'][script_id] = script_out + prescript_out
+                    scan_result['scan'][host][proto][port]['script'][script_id] = script_out
 
 
         self._scan_result = scan_result # store for later use
