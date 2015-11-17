@@ -2,10 +2,11 @@
 ```
     USAGE: nmap-tor.py <options>
     OPTIONS:
-      -h, --help        Display this message
-      -t, --targets     Specify hosts to scan from a file or comma
-                          separated list
-      -p, --ports       Specify file of ports to be used on target
+      -h, --help        Display this help message
+      -t, --targets     Specify hosts to scan from a file or a
+                         comma-separated list via CLI
+      -p, --ports       Specify ports to scan from a file or a
+                         comma-separated list via CLI
       -s, --sleep       Specify time in seconds to sleep between Nmap
                           requests (default:10)
       -n, --numhosts    Specify number of hosts to be randomly scanned
