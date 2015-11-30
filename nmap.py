@@ -185,16 +185,13 @@ class PortScanner(object):
         f_args = shlex.split(arguments)
 
         # Launch scan
-        args = ['proxychains', 'nmap', '-oX', '-', hosts] + ['-p', ports]*(ports!=None) + f_args
+        args = ['proxychains4', '-q', 'nmap', '-oX', '-', hosts] + ['-p', ports]*(ports!=None) + f_args
 
         p = subprocess.Popen(args, bufsize=100000, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         # wait until finished
         # get output
         (self._nmap_last_output, nmap_err) = p.communicate()
-        # Remove Proxychains intro text to avoid corrupting nmap xml output
-        self._nmap_last_output = self._nmap_last_output.split('\n', 1)[1]
-
 
         # nmap xml output looks like :
         #  <host starttime="1267974521" endtime="1267974522">
